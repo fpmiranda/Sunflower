@@ -26,45 +26,6 @@ void setup()
   sol._hra = HRA(sol._lst);
   sol._delta = DELTA(sol._b);
   sol._alpha = ALPHA(sol._delta, sol._lat, sol._hra);
-
-  /**Serial.print("Lat: ");
-  Serial.println(sol._lat);
-
-  Serial.print("Lon: ");
-  Serial.println(sol._lon);
-
-  Serial.print("Dias: ");
-  Serial.println(sol._d);
-
-  Serial.print("Hora local: ");
-  Serial.println(sol._lt);
-
-  Serial.print("Hora GMT: ");
-  Serial.println(sol._gmt);
-
-  Serial.print("LSTM: ");
-  Serial.println(sol._lstm);
-
-  Serial.print("B: ");
-  Serial.println(sol._b);
-
-  Serial.print("EoT: ");
-  Serial.println(sol._eot);
-
-  Serial.print("Tc: ");
-  Serial.println(sol._tc);
-
-  Serial.print("LST: ");
-  Serial.println(sol._lst);
-
-  Serial.print("HRA: ");
-  Serial.println(sol._hra);
-
-  Serial.print("Delta: ");
-  Serial.println(sol._delta);
-
-  Serial.print("Alpha: ");
-  Serial.println(sol._alpha);*/
 }
 
 void loop()
