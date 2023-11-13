@@ -106,45 +106,57 @@
         <div id="info_output">
           <div>
             <label>Meridiano de hora local padrão (LSTM): </label>
-            <label>%LSTM%</label>
+            <label id="lstm">%LSTM%</label>
           </div>
           <div>
             <label>Equação do tempo (EoT): </label>
-            <label>%EoT%</label>
+            <label id="eot">%EoT%</label>
           </div>
           <div>
             <label>Fator de correção solar (TC): </label>
-            <label>%TC%</label>
+            <label id="tc">%TC%</label>
           </div>
           <div>
             <label>Horário solar local (LST): </label>
-            <label>%LST%</label>
+            <label id="lst">%LST%</label>
           </div>
           <div>
             <label>Ângulo horário (HRA): </label>
-            <label>%HRA%</label>
+            <label id="hra">%HRA%</label>
           </div>
           <div>
             <label>Declinação solar (δ): </label>
-            <label>%DELTA%</label>
+            <label id="delta">%DELTA%</label>
           </div>
           <div>
             <label>Ângulo de elevação solar (α): </label>
-            <label>%ALPHA%</label>
+            <label id="alpha">%ALPHA%</label>
           </div>
         </div>
       </div>
-      <canvas id="canvas" width="800" height="800"></canvas>
     </div>
   </body>
   <script>
+    // Seleciona elementos do DOM
     var edit = document.getElementById("editar");
     var form = document.getElementsByClassName("form");
     var select = document.getElementById("select");
     var horario = document.getElementById("hora");
     var gmt = document.getElementById("gmt");
     var data = document.getElementById("data");
+    var latitude = document.getElementById("latitude");
+    var longitude = document.getElementById("longitude");
 
+    // Seleciona elementos da tabela
+    var lstm = document.getElementById("lstm");
+    var eot = document.getElementById("eot");
+    var tc = document.getElementById("tc");
+    var lst = document.getElementById("lst");
+    var hra = document.getElementById("hra");
+    var delta = document.getElementById("delta");
+    var alpha = document.getElementById("alpha");
+
+    // Separa dia, mes ano, hora e minuto gmt e local
     var date = new Date();
     var dia = date.getDate();
     var mes = date.getMonth() + 1;
@@ -154,7 +166,7 @@
     var utchora = date.getUTCHours();
     var utcminuto = date.getUTCMinutes();
 
-    //formata a data e hora
+    // Formata a data e hora
     if (dia < 10) dia = "0" + dia;
     if (mes < 10) mes = "0" + mes;
     if (hora < 10) hora = "0" + hora;
@@ -162,7 +174,12 @@
     if (utchora < 10) utchora = "0" + utchora;
     if (utcminuto < 10) utcminuto = "0" + utcminuto;
 
-    //atualiza os valores a cada segundo
+    // Calcula quantos dias se passaram
+    var inicio = new Date(ano, 0, 1);
+    var agora = new Date(ano, mes - 1, dia);
+    var numeroDeDias = Math.ceil((agora - inicio) / 8.64e7);
+
+    // Atualiza os valores a cada segundo
     setInterval(() => {
       if (edit.checked == false) {
         data.value = ano + "-" + mes + "-" + dia;
@@ -174,6 +191,37 @@
         gmt.value = "";
       }
     }, 1000);
+
+    setInterval(() => {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          lstm.innerHTML = xhr.responseText.lstm;
+          eot.innerHTML = xhr.responseText.eot;
+          tc.innerHTML = xhr.responseText.tc;
+          lst.innerHTML = xhr.responseText.lst;
+          hra.innerHTML = xhr.responseText.hra;
+          delta.innerHTML = xhr.responseText.delta;
+          alpha.innerHTML = xhr.responseText.alpha;
+        }
+      };
+      xhr.open(
+        "GET",
+        "/calc?" +
+          "lt=" +
+          hora +
+          "&d=" +
+          numeroDeDias +
+          "&gmt=" +
+          utchora +
+          "&lat=" +
+          latitude.value +
+          "&lon=" +
+          longitude.value,
+        true
+      );
+      xhr.send();
+    }, 10000);
 
     // toggle do formulario
     edit.addEventListener("click", function () {
@@ -205,6 +253,7 @@
         document.getElementById("latitude").value = 36.17;
         document.getElementById("longitude").value = -115.14;
       }
+      console.log("mudei a cidade");
     });
   </script>
 </html>
