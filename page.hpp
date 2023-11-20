@@ -3,7 +3,7 @@ servida pelo ESP32 */
 
 const char index_html[] PROGMEM = R"rawliteral(
   <!DOCTYPE html>
-  <html>
+<html>
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -89,7 +89,12 @@ const char index_html[] PROGMEM = R"rawliteral(
             </select>
             <label>Editar: </label>
             <input type="checkbox" id="editar" />
-            <input type="button" id="simular" value="Simular Dia" />
+            <input
+              type="button"
+              id="simular"
+              value="Simular Dia"
+              onclick="toggleSim()"
+            />
           </p>
           <p>
             <label>Latitude:</label>
@@ -136,12 +141,16 @@ const char index_html[] PROGMEM = R"rawliteral(
             <label>Ângulo de elevação solar (α): </label>
             <label id="alpha">%ALPHA%</label>
           </div>
+          <div>
+            <label>Azimute: </label>
+            <label id="azimuth">%AZIMUTH%</label>
+          </div>
         </div>
       </div>
     </div>
   </body>
   <script>
-    // Seleciona elementos do DOM
+    // Seleciona elementos do formulario
     var edit = document.getElementById("editar");
     var form = document.getElementsByClassName("form");
     var select = document.getElementById("select");
@@ -150,6 +159,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     var data = document.getElementById("data");
     var latitude = document.getElementById("latitude");
     var longitude = document.getElementById("longitude");
+    var simular = document.getElementById("simular");
 
     // Seleciona elementos da tabela
     var lstm = document.getElementById("lstm");
@@ -183,18 +193,22 @@ const char index_html[] PROGMEM = R"rawliteral(
     var agora = new Date(ano, mes - 1, dia);
     var numeroDeDias = Math.ceil((agora - inicio) / 8.64e7);
 
+    var sim = false;
+
+    // Função que ativa simulação do dia
+    function toggleSim() {
+      sim = !sim;
+      simular.value = sim ? "Parar" : "Simular Dia";
+    }
+
     // Atualiza os valores a cada segundo
     setInterval(() => {
-      if (edit.checked == false) {
+      if (edit.checked == false && sim == false) {
         data.value = ano + "-" + mes + "-" + dia;
         horario.value = hora + ":" + minuto;
         gmt.value = utchora + ":" + utcminuto;
-      } else {
-        data.value = "";
-        horario.value = "";
-        gmt.value = "";
       }
-    }, 1000);
+    }, 500);
 
     setInterval(() => {
       var xhr = new XMLHttpRequest();
@@ -208,6 +222,12 @@ const char index_html[] PROGMEM = R"rawliteral(
           hra.innerHTML = json.hra;
           delta.innerHTML = json.delta;
           alpha.innerHTML = json.alpha;
+          azimuth.innerHTML = json.azimuth;
+
+          if (sim == true) {
+            horario.value = json.hora;
+            gmt.value = json.gmt;
+          }
         }
       };
       xhr.open(
@@ -222,17 +242,22 @@ const char index_html[] PROGMEM = R"rawliteral(
           "&lat=" +
           latitude.value +
           "&lon=" +
-          longitude.value,
+          longitude.value +
+          "&sim=" +
+          sim,
         true
       );
       xhr.send();
-    }, 10000);
+    }, 1000);
 
-    // toggle do formulario
+    // toggle o formulario e limpa os campos
     edit.addEventListener("click", function () {
       for (var i = 0; i < form.length; i++) {
         if (form[i].disabled) {
           form[i].disabled = false;
+          data.value = "";
+          horario.value = "";
+          gmt.value = "";
         } else {
           form[i].disabled = true;
         }

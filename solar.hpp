@@ -15,6 +15,7 @@ struct solar_t
   float _hra;
   float _delta;
   float _alpha;
+  float _azimuth;
 };
 
 float degToRad(float deg)
@@ -65,4 +66,9 @@ float DELTA(int b)
 float ALPHA(float delta, float lat, float hra)
 {
   return radToDeg(asin((sin(degToRad(delta)) * sin(degToRad(lat))) + (cos(degToRad(delta)) * cos(degToRad(lat)) * cos(degToRad(hra)))));
+}
+
+float AZIMUTH(float delta, float lat, float hra)
+{
+  return radToDeg(acos((sin(degToRad(delta)) * cos(degToRad(lat)) - cos(degToRad(delta)) * sin(degToRad(lat)) * cos(degToRad(hra))) / cos(degToRad(ALPHA(delta, lat, hra)))));
 }
