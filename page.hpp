@@ -106,7 +106,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             <label>Hora local: </label>
             <input type="time" id="hora" class="form" disabled />
             <label>Hora GMT: </label>
-            <input type="time" id="gmt" class="form" disabled />
+            <input type="time" id="utc" class="form" disabled />
             <label>Data: </label>
             <input type="date" id="data" class="form" disabled />
           </p>
@@ -155,7 +155,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     var form = document.getElementsByClassName("form");
     var select = document.getElementById("select");
     var horario = document.getElementById("hora");
-    var gmt = document.getElementById("gmt");
+    var utc = document.getElementById("utc");
     var data = document.getElementById("data");
     var latitude = document.getElementById("latitude");
     var longitude = document.getElementById("longitude");
@@ -169,6 +169,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     var hra = document.getElementById("hra");
     var delta = document.getElementById("delta");
     var alpha = document.getElementById("alpha");
+    var azimuth = document.getElementById("azimuth");
 
     // Separa dia, mes ano, hora e minuto gmt e local
     var date = new Date();
@@ -177,7 +178,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     var ano = date.getFullYear();
     var hora = date.getHours();
     var minuto = date.getMinutes();
-    var utchora = date.getUTCHours();
+    var gmt = date.getUTCHours();
     var utcminuto = date.getUTCMinutes();
 
     // Formata a data e hora
@@ -185,7 +186,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     if (mes < 10) mes = "0" + mes;
     if (hora < 10) hora = "0" + hora;
     if (minuto < 10) minuto = "0" + minuto;
-    if (utchora < 10) utchora = "0" + utchora;
+    if (gmt < 10) gmt = "0" + gmt;
     if (utcminuto < 10) utcminuto = "0" + utcminuto;
 
     // Calcula quantos dias se passaram
@@ -203,10 +204,11 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     // Atualiza os valores a cada segundo
     setInterval(() => {
-      if (edit.checked == false && sim == false) {
+      //edit.checked == false && 
+      if (sim == false) {
         data.value = ano + "-" + mes + "-" + dia;
         horario.value = hora + ":" + minuto;
-        gmt.value = utchora + ":" + utcminuto;
+        utc.value = gmt + ":" + utcminuto;
       }
     }, 500);
 
@@ -225,8 +227,8 @@ const char index_html[] PROGMEM = R"rawliteral(
           azimuth.innerHTML = json.azimuth;
 
           if (sim == true) {
-            horario.value = json.hora;
-            gmt.value = json.gmt;
+            horario.value = json.hora + ":" + minuto;;
+            gmt.value = json.gmt + ":" + utcminuto;
           }
         }
       };
@@ -238,13 +240,13 @@ const char index_html[] PROGMEM = R"rawliteral(
           "&d=" +
           numeroDeDias +
           "&gmt=" +
-          utchora +
+          gmt +
           "&lat=" +
           latitude.value +
           "&lon=" +
           longitude.value +
           "&sim=" +
-          sim,
+          [sim ? 1 : 0],
         true
       );
       xhr.send();
@@ -286,4 +288,5 @@ const char index_html[] PROGMEM = R"rawliteral(
     });
   </script>
 </html>
+
 )rawliteral";

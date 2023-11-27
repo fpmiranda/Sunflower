@@ -35,6 +35,8 @@ AsyncWebServer server(80);
 // Inicialização de variáveis utilizando o tipo solar_t que contém a estrutura de dados
 solar_t solar;
 
+Servo servo;
+
 void calculaValores(solar_t &sol)
 {
   // Cálculo dos valores utilizando as funções
@@ -115,12 +117,17 @@ void setup()
   server.on("/calc", HTTP_GET, [](AsyncWebServerRequest *request)
             {
               if(request->hasParam(PARAM_MESSAGE)){
-                Serial.println("Recebendo parametros");
                 solar._lat = request->getParam("lat")->value().toFloat();
                 solar._lon = request->getParam("lon")->value().toFloat();
                 solar._d = request->getParam("d")->value().toFloat();
-                solar._lt = request->getParam("lt")->value().toFloat();
-                solar._gmt = request->getParam("gmt")->value().toFloat();
+
+                if(request->getParam("sim")->value().toInt() == 1) stt = SIM;
+                else {
+                  stt = RUN;
+                  solar._lt = request->getParam("lt")->value().toFloat();
+                  solar._gmt = request->getParam("gmt")->value().toFloat();
+                }
+
                 calculaValores(solar);
               }
 
@@ -152,17 +159,34 @@ void loop()
   switch (stt)
   {
   case RUN:
+    // servo.detach();
 
     break;
   case PAUSE:
 
     break;
   case SIM:
-    // A cada intervalo de tempo, incrementa os valores de lt e gmt e reseta timer
-    if (timer - millis() > interval)
+    // servo.attach(15);
+    //  A cada intervalo de tempo, incrementa os valores de lt e gmt e reseta timer
+    if (millis() - timer > interval)
     {
-      solar._lt += 1;
-      solar._gmt += 1;
+      calculaValores(solar);
+      Serial.println();
+      Serial.println(solar._lt);
+      Serial.println(solar._gmt);
+      Serial.println(solar._azimuth);
+      Serial.println();
+
+      if (solar._lt > 6 && solar._lt < 18)
+      {
+        solar._lt++;
+        solar._gmt++;
+      }
+      else
+      {
+        stt = RUN;
+      }
+
       timer = millis();
     }
     break;
