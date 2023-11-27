@@ -2,7 +2,7 @@
 servida pelo ESP32 */
 
 const char index_html[] PROGMEM = R"rawliteral(
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
@@ -228,7 +228,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
           if (sim == true) {
             horario.value = json.hora + ":" + minuto;;
-            gmt.value = json.gmt + ":" + utcminuto;
+            utc.value = json.gmt + ":" + utcminuto;
           }
         }
       };
@@ -288,5 +288,4 @@ const char index_html[] PROGMEM = R"rawliteral(
     });
   </script>
 </html>
-
 )rawliteral";

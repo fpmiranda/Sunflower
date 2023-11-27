@@ -19,6 +19,7 @@ const char *PARAM_MESSAGE = "lat";
 
 // Deeclaração do timer
 unsigned long timer = 0;
+float anguloAnterior = 0;
 
 // Declaração da FSM
 enum
@@ -35,8 +36,31 @@ AsyncWebServer server(80);
 // Inicialização de variáveis utilizando o tipo solar_t que contém a estrutura de dados
 solar_t solar;
 
+// Inicialização do servo
 Servo servo;
 
+// Função para calcular o angulo que o servo do alpha deve se mover
+float calculaAngulo(float L, float alpha)
+{
+  return (360 * L * cos(alpha)) / 8.14; // 8.14 é o perímetro da engrenagem
+}
+
+// Função para imprimir valores da estrutura solar_t
+void imprimeValores(solar_t &sol)
+{
+  Serial.println();
+  Serial.println(sol._lstm);
+  Serial.println(sol._eot);
+  Serial.println(sol._tc);
+  Serial.println(sol._lst);
+  Serial.println(sol._hra);
+  Serial.println(sol._delta);
+  Serial.println(sol._alpha);
+  Serial.println(sol._azimuth);
+  Serial.println();
+}
+
+// Função para cálculo dos valores
 void calculaValores(solar_t &sol)
 {
   // Cálculo dos valores utilizando as funções
@@ -76,6 +100,30 @@ String processor(const String &var)
     return String(solar._alpha);
   else if (var == "AZIMUTH")
     return String(solar._azimuth);
+}
+
+// Função para ativar o servo motor no sentido horário
+void ativaServoHorario(Servo &servo, int pin, int angulo)
+{
+  servo.attach(pin);
+  for (int i = 0; i < angulo; i++)
+  {
+    servo.write(angulo);
+    delay(15);
+  }
+  servo.detach();
+}
+
+// Função para ativar o servo motor no sentido anti-horário
+void ativaServoAntiHorario(Servo &servo, int pin, int angulo)
+{
+  servo.attach(pin);
+  for (int i = angulo; i >= 0; i--)
+  {
+    servo.write(angulo);
+    delay(15);
+  }
+  servo.detach();
 }
 
 void setup()
@@ -144,7 +192,7 @@ void setup()
 
               // Envia os valores de lt e gmt apenas se a FSM estiver em modo de simulação
               if(stt == SIM){
-                json["hora"] = String(solar._lt);
+                json["hora"] = String((int)solar._lt);
                 json["gmt"] = String(solar._gmt);
               }
 
@@ -159,42 +207,49 @@ void loop()
   switch (stt)
   {
   case RUN:
-    // servo.detach();
-
+    // Não implementado pois só usaremos o modo simulação
     break;
+
   case PAUSE:
-
+    // Não implementado
     break;
+
   case SIM:
     // servo.attach(15);
     //  A cada intervalo de tempo, incrementa os valores de lt e gmt e reseta timer
     if (millis() - timer > interval)
     {
       calculaValores(solar);
-      Serial.println();
-      Serial.println(solar._lt);
-      Serial.println(solar._gmt);
-      Serial.println(solar._azimuth);
-      Serial.println();
+      imprimeValores(solar);
+      Serial.println(anguloAnterior);
 
+      // Calcula valores para controle dos motores com base no angulo atual e no anterior
+      int alphaAngulo = calculaAngulo(9, solar._alpha);
+
+      // Calcula o angulo que o servo deve se mover com base no comprimento da base e no angulo alpha e move o motor
+      Serial.println(alphaAngulo); // Simula o motor
+      // ativaServoAntiHorario(servo, 15, alphaAngulo - anguloAnterior);
+
+      // Incrementa os valores de lt e gmt durante o período de simulação
       if (solar._lt > 6 && solar._lt < 18)
       {
+        anguloAnterior = solar._alpha;
         solar._lt++;
         solar._gmt++;
       }
       else
-      {
-        stt = RUN;
-      }
+        stt = STOP;
 
       timer = millis();
     }
     break;
-  case STOP:
 
+  case STOP:
+    // Não implementado
     break;
 
   default:
+    // Não faz nada
     break;
   }
 }
