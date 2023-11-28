@@ -204,7 +204,6 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     // Atualiza os valores a cada segundo
     setInterval(() => {
-      //edit.checked == false && 
       if (sim == false) {
         data.value = ano + "-" + mes + "-" + dia;
         horario.value = hora + ":" + minuto;
@@ -229,6 +228,7 @@ const char index_html[] PROGMEM = R"rawliteral(
           if (sim == true) {
             horario.value = json.hora + ":" + minuto;;
             utc.value = json.gmt + ":" + utcminuto;
+            if(json.hora >= 18) toggleSim();
           }
         }
       };

@@ -13,8 +13,8 @@
 #define interval 2000
 
 // Inicialização das constantes
-const char *ssid = "";
-const char *senha = "";
+const char *ssid = "Giovanna_Quarto";
+const char *senha = "fe300194!";
 const char *PARAM_MESSAGE = "lat";
 
 // Deeclaração do timer
@@ -193,7 +193,7 @@ void setup()
               // Envia os valores de lt e gmt apenas se a FSM estiver em modo de simulação
               if(stt == SIM){
                 json["hora"] = String((int)solar._lt);
-                json["gmt"] = String(solar._gmt);
+                json["gmt"] = String((int)solar._gmt);
               }
 
               serializeJson(json, *response);
@@ -231,9 +231,10 @@ void loop()
       // ativaServoAntiHorario(servo, 15, alphaAngulo - anguloAnterior);
 
       // Incrementa os valores de lt e gmt durante o período de simulação
-      if (solar._lt > 6 && solar._lt < 18)
+      if (solar._lt >= 6 && solar._lt <= 18)
       {
         anguloAnterior = solar._alpha;
+        // ativaServoAntiHorario(servo, 12, 15); // Ativa o motor que move o painel conforme o dia passa, entre 6h e 18h
         solar._lt++;
         solar._gmt++;
       }
