@@ -13,8 +13,8 @@
 #define interval 2000
 
 // Inicialização das constantes
-const char *ssid = "Giovanna_Quarto";
-const char *senha = "fe300194!";
+const char *ssid = "";
+const char *senha = "";
 const char *PARAM_MESSAGE = "lat";
 
 // Deeclaração do timer
