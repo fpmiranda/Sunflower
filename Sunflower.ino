@@ -19,7 +19,9 @@ const char *PARAM_MESSAGE = "lat";
 
 // Deeclaração do timer
 unsigned long timer = 0;
-float anguloAnterior = 0;
+int alphaAnterior = 0;
+Servo servo1;
+Servo servo2;
 
 // Declaração da FSM
 enum
@@ -38,12 +40,6 @@ solar_t solar;
 
 // Inicialização do servo
 Servo servo;
-
-// Função para calcular o angulo que o servo do alpha deve se mover
-float calculaAngulo(float L, float alpha)
-{
-  return (360 * L * cos(alpha)) / 8.14; // 8.14 é o perímetro da engrenagem
-}
 
 // Função para imprimir valores da estrutura solar_t
 void imprimeValores(solar_t &sol)
@@ -103,27 +99,27 @@ String processor(const String &var)
 }
 
 // Função para ativar o servo motor no sentido horário
-void ativaServoHorario(Servo &servo, int pin, int angulo)
+void ativaServoHorario(Servo &servo, int pin, int angulo_a, int angulo_f)
 {
+  int i;
   servo.attach(pin);
-  for (int i = 0; i < angulo; i++)
+  for (i = angulo_a; i <= angulo_f; i++)
   {
-    servo.write(angulo);
+    servo.write(i);
     delay(15);
   }
-  servo.detach();
 }
 
 // Função para ativar o servo motor no sentido anti-horário
-void ativaServoAntiHorario(Servo &servo, int pin, int angulo)
+void ativaServoAntiHorario(Servo &servo, int pin, int angulo_a, int angulo_f)
 {
+  int i;
   servo.attach(pin);
-  for (int i = angulo; i >= 0; i--)
+  for (i = angulo_a; i > angulo_f; i--)
   {
-    servo.write(angulo);
+    servo.write(i);
     delay(15);
   }
-  servo.detach();
 }
 
 void setup()
@@ -172,8 +168,8 @@ void setup()
                 if(request->getParam("sim")->value().toInt() == 1) stt = SIM;
                 else {
                   stt = RUN;
-                  solar._lt = request->getParam("lt")->value().toFloat();
-                  solar._gmt = request->getParam("gmt")->value().toFloat();
+                  solar._lt = 6;
+                  solar._gmt = request->getParam("gmt")->value().toInt(); // corrigir
                 }
 
                 calculaValores(solar);
@@ -207,6 +203,8 @@ void loop()
   switch (stt)
   {
   case RUN:
+    servo1.detach();
+    servo2.detach();
     // Não implementado pois só usaremos o modo simulação
     break;
 
@@ -215,42 +213,51 @@ void loop()
     break;
 
   case SIM:
-    // servo.attach(15);
     //  A cada intervalo de tempo, incrementa os valores de lt e gmt e reseta timer
     if (millis() - timer > interval)
     {
       calculaValores(solar);
-      imprimeValores(solar);
-      Serial.println(anguloAnterior);
 
-      // Calcula valores para controle dos motores com base no angulo atual e no anterior
-      int alphaAngulo = calculaAngulo(9, solar._alpha);
+      servo2.attach(2);
 
-      // Calcula o angulo que o servo deve se mover com base no comprimento da base e no angulo alpha e move o motor
-      Serial.println(alphaAngulo); // Simula o motor
-      // ativaServoAntiHorario(servo, 15, alphaAngulo - anguloAnterior);
-
-      // Incrementa os valores de lt e gmt durante o período de simulação
       if (solar._lt >= 6 && solar._lt <= 18)
       {
-        anguloAnterior = solar._alpha;
-        // ativaServoAntiHorario(servo, 12, 15); // Ativa o motor que move o painel conforme o dia passa, entre 6h e 18h
+
+        // Ativa o servo 2 para acompanhar as horas
+        servo2.write((solar._lt * 8) - 30);
+
+        // Incrementa os valores de lt e gmt durante o período de simulação
         solar._lt++;
         solar._gmt++;
+
+        // Ativa sentido horário ou antihorario dependendo do valor de alpha
+        if (alphaAnterior < solar._alpha)
+        {
+          ativaServoHorario(servo1, 15, alphaAnterior, solar._alpha);
+        }
+        if (alphaAnterior >= solar._alpha)
+        {
+          ativaServoAntiHorario(servo1, 15, alphaAnterior, solar._alpha);
+        }
+
+        alphaAnterior = (int)solar._alpha;
       }
       else
+      {
         stt = STOP;
+        alphaAnterior = 0;
+        servo1.detach();
+        servo2.detach();
+      }
+      break;
 
-      timer = millis();
+    case STOP:
+      // Não implementado
+      break;
+
+    default:
+      // Não faz nada
+      break;
     }
-    break;
-
-  case STOP:
-    // Não implementado
-    break;
-
-  default:
-    // Não faz nada
-    break;
   }
 }
