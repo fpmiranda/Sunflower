@@ -165,11 +165,24 @@ void setup()
                 solar._lon = request->getParam("lon")->value().toFloat();
                 solar._d = request->getParam("d")->value().toFloat();
 
-                if(request->getParam("sim")->value().toInt() == 1) stt = SIM;
+                if(request->getParam("sim")->value().toInt() == 1 && stt == RUN){
+                   stt = SIM;
+
+                  // Coleta lt e gmt para achar o delta
+                  solar._lt = request->getParam("lt")->value().toFloat();
+                  solar._gmt = request->getParam("gmt")->value().toFloat();
+
+                  // Calcula o delta gmt
+                  int delta_gmt = solar._gmt - solar._lt;
+
+                  // Altera o horário para o começo do dia
+                  solar._lt = 6;
+                  solar._gmt = (int)solar._lt + delta_gmt;
+                }
                 else {
                   stt = RUN;
-                  solar._lt = 6;
-                  solar._gmt = request->getParam("gmt")->value().toInt(); // corrigir
+                  solar._lt = request->getParam("lt")->value().toFloat();
+                  solar._gmt = request->getParam("gmt")->value().toFloat();
                 }
 
                 calculaValores(solar);
@@ -188,8 +201,11 @@ void setup()
 
               // Envia os valores de lt e gmt apenas se a FSM estiver em modo de simulação
               if(stt == SIM){
-                json["hora"] = String((int)solar._lt);
-                json["gmt"] = String((int)solar._gmt);
+                if(solar._lt < 10) json["hora"] = "0" + String((int)solar._lt);
+                else json["hora"] = String((int)solar._lt);
+
+                if(solar._gmt < 10) json["gmt"] = "0" + String((int)solar._gmt);
+                else json["gmt"] = String((int)solar._gmt);
               }
 
               serializeJson(json, *response);
